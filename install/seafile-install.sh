@@ -83,13 +83,13 @@ $STD pip3 install \
     cffi \
     lxml \
     python-ldap
-msg_ok "Installed Seafile Python Dependecies"
+msg_ok "Installed Seafile Python Dependencies"
 
 msg_info "Installing Seafile"
 IP=$(ip a s dev eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
 SEAFILE_ARCHIVE="seafile-server_${SEAFILE_VERSION}_x86-64.tar.gz"
-# SEAFILE_FOLDER="seafile-server-${SEAFILE_VERSION}"
 SEAFILE_OPT_FOLDER="/opt/seafile/seafile-server-${SEAFILE_VERSION}"
+SEAFILE_SYMLINK_FOLDER="/opt/seafile/seafile-server-latest"
 mkdir -p /opt/seafile
 useradd seafile
 mkdir -p /home/seafile
@@ -210,9 +210,9 @@ echo -e "CSRF_TRUSTED_ORIGINS = ['http://$IP/']" >>/opt/seafile/conf/seahub_sett
 msg_ok "Conf files adjusted"
 
 msg_info "Setting up Seafile"
-$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seafile.sh start"
+$STD su - seafile -c "bash ${SEAFILE_SYMLINK_FOLDER}/seafile.sh start"
 $STD su - seafile -c "expect <<EOF
-spawn bash ${SEAFILE_OPT_FOLDER}/seahub.sh start
+spawn bash ${SEAFILE_SYMLINK_FOLDER}/seahub.sh start
 expect {
     \"email\" {
         send \"$ADMIN_EMAIL\r\"
@@ -230,8 +230,8 @@ expect {
     }
 expect eof
 EOF"
-$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seahub.sh stop" || true
-$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seafile.sh stop" || true
+$STD su - seafile -c "bash ${SEAFILE_SYMLINK_FOLDER}/seahub.sh stop" || true
+$STD su - seafile -c "bash ${SEAFILE_SYMLINK_FOLDER}/seafile.sh stop" || true
 msg_ok "Seafile setup"
 
 msg_info "Creating Services"
@@ -248,10 +248,10 @@ Group=seafile
 WorkingDirectory=/opt/seafile
 RemainAfterExit=yes
 
-ExecStart=${SEAFILE_OPT_FOLDER}/seafile.sh start
-ExecStart=${SEAFILE_OPT_FOLDER}/seahub.sh start
-ExecStop=${SEAFILE_OPT_FOLDER}/seahub.sh stop
-ExecStop=${SEAFILE_OPT_FOLDER}/seafile.sh stop
+ExecStart=${SEAFILE_SYMLINK_FOLDER}/seafile.sh start
+ExecStart=${SEAFILE_SYMLINK_FOLDER}/seahub.sh start
+ExecStop=${SEAFILE_SYMLINK_FOLDER}/seahub.sh stop
+ExecStop=${SEAFILE_SYMLINK_FOLDER}/seafile.sh stop
 
 Restart=on-failure
 RestartSec=5s
