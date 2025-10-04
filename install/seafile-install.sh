@@ -115,7 +115,7 @@ expect {
     }
 }
 expect {
-    \"Which port do you want to use for the seafile fileserver\" {
+    -re \"Which port do you want to use for the seafile fileserve[r]\" {
         send \"8082\r\"
     }
 }
@@ -187,6 +187,20 @@ EOF
 msg_ok "Memcached Started"
 
 msg_info "Adjusting Conf files"
+JWT=$(openssl rand -base64 42)
+cat <<EOF >/opt/seafile/conf/.env
+LC_ALL=en_US.UTF-8
+JWT_PRIVATE_KEY=${JWT}
+SEAFILE_SERVER_PROTOCOL=http
+SEAFILE_SERVER_HOSTNAME=seafile.example.com
+SEAFILE_MYSQL_DB_HOST=$IP
+SEAFILE_MYSQL_DB_PORT=3306
+SEAFILE_MYSQL_DB_USER=seafile
+SEAFILE_MYSQL_DB_PASSWORD=$DB_PASS
+SEAFILE_MYSQL_DB_CCNET_DB_NAME=ccnet_db
+SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=seafile_db
+SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=seahub_db
+EOF
 sed -i "0,/127.0.0.1/s/127.0.0.1/0.0.0.0/" /opt/seafile/conf/gunicorn.conf.py
 sed -i "0,/SERVICE_URL = \"http:\/\/$IP\"/s/SERVICE_URL = \"http:\/\/$IP\"/SERVICE_URL = \"http:\/\/$IP:8000\"/" /opt/seafile/conf/seahub_settings.py
 echo -e "\nFILE_SERVER_ROOT = \"http://$IP:8082\"" >>/opt/seafile/conf/seahub_settings.py
