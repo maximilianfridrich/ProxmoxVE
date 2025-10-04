@@ -13,6 +13,9 @@ setting_up_container
 network_check
 update_os
 
+SEAFILE_VERSION="12.0.14"
+SEAFILE_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/download.seadrive.org/seafile-server_${SEAFILE_VERSION}_x86-64.tar.gz"
+
 msg_info "Installing Dependencies (Patience)"
 $STD apt-get install -y expect
 msg_ok "Installed Dependencies"
@@ -84,15 +87,18 @@ msg_ok "Installed Seafile Python Dependecies"
 
 msg_info "Installing Seafile"
 IP=$(ip a s dev eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
+SEAFILE_ARCHIVE="seafile-server_${SEAFILE_VERSION}_x86-64.tar.gz"
+# SEAFILE_FOLDER="seafile-server-${SEAFILE_VERSION}"
+SEAFILE_OPT_FOLDER="/opt/seafile/seafile-server-${SEAFILE_VERSION}"
 mkdir -p /opt/seafile
 useradd seafile
 mkdir -p /home/seafile
 chown seafile: /home/seafile
 chown seafile: /opt/seafile
-$STD su - seafile -c "curl -fsSL https://s3.eu-central-1.amazonaws.com/download.seadrive.org/seafile-server_11.0.13_x86-64.tar.gz -o seafile-server_11.0.13_x86-64.tar.gz"
-$STD su - seafile -c "tar -xzf seafile-server_11.0.13_x86-64.tar.gz -C /opt/seafile/"
+$STD su - seafile -c "curl -fsSL ${SEAFILE_DOWNLOAD_URL} -o ${SEAFILE_ARCHIVE}"
+$STD su - seafile -c "tar -xzf ${SEAFILE_ARCHIVE} -C /opt/seafile/"
 $STD su - seafile -c "expect <<EOF
-spawn bash /opt/seafile/seafile-server-11.0.13/setup-seafile-mysql.sh
+spawn bash ${SEAFILE_OPT_FOLDER}/setup-seafile-mysql.sh
 expect {
     \"Press ENTER to continue\" {
         send \"\r\"
@@ -190,9 +196,9 @@ echo -e "CSRF_TRUSTED_ORIGINS = ['http://$IP/']" >>/opt/seafile/conf/seahub_sett
 msg_ok "Conf files adjusted"
 
 msg_info "Setting up Seafile"
-$STD su - seafile -c "bash /opt/seafile/seafile-server-latest/seafile.sh start"
+$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seafile.sh start"
 $STD su - seafile -c "expect <<EOF
-spawn bash /opt/seafile/seafile-server-latest/seahub.sh start
+spawn bash ${SEAFILE_OPT_FOLDER}/seahub.sh start
 expect {
     \"email\" {
         send \"$ADMIN_EMAIL\r\"
@@ -210,8 +216,8 @@ expect {
     }
 expect eof
 EOF"
-$STD su - seafile -c "bash /opt/seafile/seafile-server-latest/seahub.sh stop" || true
-$STD su - seafile -c "bash /opt/seafile/seafile-server-latest/seafile.sh stop" || true
+$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seahub.sh stop" || true
+$STD su - seafile -c "bash ${SEAFILE_OPT_FOLDER}/seafile.sh stop" || true
 msg_ok "Seafile setup"
 
 msg_info "Creating Services"
@@ -228,10 +234,10 @@ Group=seafile
 WorkingDirectory=/opt/seafile
 RemainAfterExit=yes
 
-ExecStart=/opt/seafile/seafile-server-latest/seafile.sh start 
-ExecStart=/opt/seafile/seafile-server-latest/seahub.sh start
-ExecStop=/opt/seafile/seafile-server-latest/seahub.sh stop 
-ExecStop=/opt/seafile/seafile-server-latest/seafile.sh stop
+ExecStart=${SEAFILE_OPT_FOLDER}/seafile.sh start
+ExecStart=${SEAFILE_OPT_FOLDER}/seahub.sh start
+ExecStop=${SEAFILE_OPT_FOLDER}/seahub.sh stop
+ExecStop=${SEAFILE_OPT_FOLDER}/seafile.sh stop
 
 Restart=on-failure
 RestartSec=5s
