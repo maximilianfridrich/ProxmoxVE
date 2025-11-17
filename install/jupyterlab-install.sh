@@ -22,28 +22,29 @@ $STD uv venv /opt/jupyter/.venv
 $STD /opt/jupyter/.venv/bin/python -m ensurepip --upgrade
 $STD /opt/jupyter/.venv/bin/python -m pip install --upgrade pip
 $STD /opt/jupyter/.venv/bin/python -m pip install jupyter
+$STD /opt/jupyter/.venv/bin/python -m pip install catppuccin-jupyterlab
 ln -s /opt/jupyter/.venv/bin/jupyter /usr/local/bin/jupyter
 ln -s /opt/jupyter/.venv/bin/jupyter-lab /usr/local/bin/jupyter-lab
 ln -s /opt/jupyter/.venv/bin/jupyter-notebook /usr/local/bin/jupyter-notebook
 msg_ok "Installed Jupyter"
 
 msg_info "Creating Service"
-cat <<EOF >/etc/systemd/system/jupyternotebook.service
+cat <<EOF >/etc/systemd/system/jupyterlab.service
 [Unit]
-Description=Jupyter Notebook Server
+Description=Jupyter Lab Server
 After=network.target
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/jupyter
-ExecStart=/opt/jupyter/.venv/bin/jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root
+ExecStart=/opt/jupyter/.venv/bin/jupyter lab --no-browser --ip=0.0.0.0 --port=8888 --allow-root
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now jupyternotebook
+systemctl enable -q --now jupyterlab
 msg_ok "Created Service"
 
 motd_ssh

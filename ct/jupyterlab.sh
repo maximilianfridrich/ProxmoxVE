@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/maximilianfridrich/ProxmoxVE/jupyter_lab/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: Dave-code-creater (Tan Dat, Ta)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://jupyter.org/
 
-APP="JupyterNotebook"
+APP="JupyterLab"
 var_tags="${var_tags:-ai;dev-tools}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
@@ -27,7 +27,7 @@ function update_script() {
   INSTALL_DIR="/opt/jupyter"
   VENV_PYTHON="${INSTALL_DIR}/.venv/bin/python"
   VENV_JUPYTER="${INSTALL_DIR}/.venv/bin/jupyter"
-  SERVICE_FILE="/etc/systemd/system/jupyternotebook.service"
+  SERVICE_FILE="/etc/systemd/system/jupyterlab.service"
 
   if [[ ! -x "$VENV_JUPYTER" ]]; then
     msg_info "Migrating to uv venv"
@@ -38,11 +38,13 @@ function update_script() {
     $STD "$VENV_PYTHON" -m ensurepip --upgrade
     $STD "$VENV_PYTHON" -m pip install --upgrade pip
     $STD "$VENV_PYTHON" -m pip install jupyter
+    $STD "$VENV_PYTHON" -m pip install catppuccin-jupyterlab
     msg_ok "Migrated to uv and installed Jupyter"
   else
     msg_info "Updating Jupyter"
     $STD "$VENV_PYTHON" -m pip install --upgrade pip
     $STD "$VENV_PYTHON" -m pip install --upgrade jupyter
+    $STD "$VENV_PYTHON" -m pip install --upgrade catppuccin-jupyterlab
     msg_ok "Jupyter updated"
   fi
 
@@ -50,19 +52,19 @@ function update_script() {
     msg_info "Updating systemd service to use .venv"
     cat <<EOF >"$SERVICE_FILE"
 [Unit]
-Description=Jupyter Notebook Server
+Description=Jupyter Lab Server
 After=network.target
 [Service]
 Type=simple
 WorkingDirectory=${INSTALL_DIR}
-ExecStart=${VENV_JUPYTER} notebook --ip=0.0.0.0 --port=8888 --allow-root
+ExecStart=${VENV_JUPYTER} lab --no-browser --ip=0.0.0.0 --port=8888 --allow-root
 Restart=always
 RestartSec=10
 [Install]
 WantedBy=multi-user.target
 EOF
     systemctl daemon-reexec
-    systemctl restart jupyternotebook
+    systemctl restart jupyterlab
     msg_ok "Updated successfully!"
   fi
   exit

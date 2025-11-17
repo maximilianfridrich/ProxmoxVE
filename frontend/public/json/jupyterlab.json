@@ -1,6 +1,6 @@
 {
-  "name": "Jupyter Notebook",
-  "slug": "jupyternotebook",
+  "name": "Jupyter Lab",
+  "slug": "jupyterlab",
   "categories": [
     20
   ],
@@ -17,7 +17,7 @@
   "install_methods": [
     {
       "type": "default",
-      "script": "ct/jupyternotebook.sh",
+      "script": "ct/jupyterlab.sh",
       "resources": {
         "cpu": 2,
         "ram": 2048,
